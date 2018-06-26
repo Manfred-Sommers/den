@@ -1,228 +1,246 @@
 
 # coding: utf-8
 
-# # US Births  
-# ## CHRISTMAS DAY SEEMS LIKE THE LEAST POPULAR DAY TO GIVE BIRTH  
-# Columns from Left to right:  
-# >Year  
-# Month  
-# Day of Month  
-# Day of Week (1 = Monday)  
-# Number of Births
+# In[2]:
 
-# In[59]:
 
+import csv
+data = list(csv.reader(open('guns.csv')))
+print(data[:5])
 
-def read_csv(file):
-    string_list = open(file,"r").read().split("\n")
-    final_list =[]
-    for s in string_list[1:]:
-        int_fields =[]
-        string_fields = s.split(",")
-        for x in string_fields:
-            int_fields.append(int(x))
-        final_list.append(int_fields)
-    return final_list
 
+# In[3]:
 
-# In[60]:
 
+headers = data[0]
+data = data[1:]
+print(headers)
+print(data[:5])
 
-cdc_list = read_csv("US_births_1994-2003_CDC_NCHS.csv")
-for i in range(10):
-    print(cdc_list[i])
 
+# In[4]:
 
-# In[61]:
 
+years = list(d[1] for d in data)
+year_counts = {}
+for year in years:
+    if year not in year_counts:
+        year_counts[year] = 1
+    else: year_counts[year] += 1
+year_counts
 
-ssa_list = read_csv("US_births_2000-2014_SSA.csv")
-ssa_list
 
+# # Gun Deaths by Year  
+# The number of gun deaths per year doesn't seem to have changed much inbetween 2012 and 2014.
 
-# In[62]:
+# In[5]:
 
 
-def calc_count(data,column):
-    births_per_column = {}
-    for d in data:
-        if d[column] in births_per_column.keys():
-            births_per_column[d[column]] += d[4]
-        else: births_per_column[d[column]] = d[4]
-    return births_per_column
+import datetime 
+dates = list(datetime.datetime(year = int(d[1]), month = int(d[2]), day = 1) for d in data)
+dates[:5]
 
 
-# In[63]:
+# In[6]:
 
 
-cdc_year_births = calc_count(cdc_list, 0)
-cdc_year_births
+date_counts = {}
+for date in dates:
+    if date not in date_counts:
+        date_counts[date] = 1
+    else: date_counts[date] += 1
 
 
-# In[64]:
+# In[7]:
 
 
-ssa_year_births = calc_count(ssa_list, 0)
-ssa_year_births
+month_counts = {}
+for date, count in date_counts.items():
+    if date.strftime("%B") not in month_counts:
+        month_counts[date.strftime('%B')] = date_counts[date]
+    else: month_counts[date.strftime('%B')] += date_counts[date]
+month_counts        
 
 
-# ## Births Per Year  
-# 1997 seems to have been the year with the lowest number of births while 2007 seems to have been the year with the highest number of births.
+# # Gun Deaths by Month  
+# The number of gun deaths was highest in the the month of July for both 2012 and 2013. If we add the total number of deaths that occured in each month over the three years, July has the highest occurance. This may be because American Independence day falls on the fourth of July and some of the shootings might have been politically motivated.
 
-# In[90]:
+# In[8]:
 
 
-cdc_month_births = calc_count(cdc_list,1)
-cdc_month_births
+month_homicide_count = {}
+for i, date in enumerate(dates):
+    if (data[i][3]=='Homicide' and 
+        date.strftime("%B") not in month_homicide_count):
+        month_homicide_count[date.strftime("%B")] = 1
+    elif data[i][3]=='Homicide':
+         month_homicide_count[date.strftime("%B")] += 1
+month_homicide_count        
 
 
-# In[89]:
+# # Homicide by Month  
+# When we look at the number of homicides per a month over the four years, we see that July still has the highest tally. The difference, however, is not remarkable.  This would indicate that there are a fair number of suicides in July as well.  This could possibly be as a result of people feeling lonely during Idependance celebrations or over the summer break. 
 
+# In[9]:
 
-ssa_month_births = calc_count(ssa_list,1)
-ssa_month_births
 
+sex_counts = {}
+sex_counts["Male"] = 0
+sex_counts["Female"] = 0
+for d in data:
+    if d[5]=='M': sex_counts["Male"] += 1
+    elif d[5]=='F': sex_counts["Female"] += 1
+sex_counts
 
-# ## Births per Month  
-# Both the cdc, as well as the ssa data sets indicate that August was the month with the highest number of births.  The cdc as well as the ssa data sets also both concurr on the month with the lowest number of births, namely February.
 
-# In[91]:
+# # Gun deaths by Gender  
+# Surprisingly most of the gun deaths victims in the US are male. Although women are often the victims of violence because they are seen as soft targets, men are more likely to be involve in gang activity. Studies have also shown that men who commit suicide are more likely to use firearms while women generally prefer less violent means. 
 
+# In[10]:
 
-cdc_dom_births = calc_count(cdc_list,2)
-cdc_dom_births
 
+race_counts = {}
+for d in data:
+    if d[7] not in race_counts: race_counts[d[7]] = 1
+    else: race_counts[d[7]] += 1
+race_counts
 
-# In[93]:
 
+# # Gun Deaths by Race  
+# The largest number of gun death victims in the US are White, with Black victims coming in second place.  Because the largest Demographic group is White and the second largest is Black, this doesn't indicate that a particular group is being targeted. 
 
-ssa_dom_births = calc_count(ssa_list,2)
-ssa_dom_births
+# In[11]:
 
 
-# ## Births per Day of Month  
-# Both data sets obviously show that the 31st is the day of the month with the lowest birth rate as it has the lowest frequency, while they both indicate that the 18th and the 20th respectively have the highest number of births.
+census = list(csv.reader(open("census.csv")))
+print(census)
 
-# In[95]:
 
+# In[12]:
 
-cdc_dow_births = calc_count(cdc_list, 3)
-cdc_dow_births
 
+mapping = {}
+mapping['Asian/Pacific Islander'] = int(census[1][14]) + int(census[1][15])
+mapping['Black'] = int(census[1][12])
+mapping['Native American/Native Alaskan'] = int(census[1][13])
+mapping['Hispanic'] = int(census[1][11])
+mapping['White'] = int(census[1][10])
+race_per_hundredk = {}
+for race in race_counts:
+    race_per_hundredk[race] = race_counts[race]*100000/mapping[race]
+race_per_hundredk
 
-# In[94]:
 
+# # Gun Deaths per 100 000 by Race  
+# It is interesting that when we take the population size into account, Blacks are now most likely to be victims of gun death, with Whites second, then native American and lastly Hispanic.  This may be related to poverty and living in crime ridden areas.
 
-ssa_dow_births = calc_count(ssa_list, 3)
-ssa_dow_births
+# In[13]:
 
 
-# ## Births per Day of Week  
-# Both data sets indicate that there is a higher number of births during the working days and a lower number of births over the weekend.  Both sets show that Tuesday is the day with the highest number of births, while Sunday is the day with the lowest number of births.
-# 
+intents = list(d[3] for d in data)
+races = list(d[7] for d in data)
+homicide_race_counts = {}
+for i, race in enumerate(races):
+    if intents[i]=="Homicide" and race not in homicide_race_counts:
+        homicide_race_counts[race] = 1
+    elif intents[i]=="Homicide": homicide_race_counts[race] += 1
+for race, count in homicide_race_counts.items():
+    homicide_race_counts[race] = count*100000/mapping[race]
+homicide_race_counts
 
-# In[68]:
 
+# # Homicide per 100 000 by Race  
+# When we filter the gun deaths to show the number of homicides only, per 100k by race, we see a very different result.  Black victims are still the majority, but now we see Hispanics and Whites having switched places.  This may be because many of the White gun deaths are suicides.  The Hispanics, however, many of whom are immigrants, may be more likely to get involved in gang activity. 
 
-def min_births(data):
-    min_list = data[0]
-    for d in data:
-        if d[4] < min_list[4]: min_list = d
-    return min_list
+# In[14]:
 
 
-# In[96]:
+gender_suicide = {}
+gender_suicide['Male'] = 0
+gender_suicide['Female'] = 0
+for d in data:
+    if d[3]=='Suicide' and d[5]=='M':
+        gender_suicide['Male'] += 1
+    elif d[3]=='Suicide' and d[5]=='F':
+        gender_suicide['Female'] += 1
+gender_suicide
 
 
-cdc_min = min_births(cdc_list)
-print(cdc_min)
-ssa_min = min_births(ssa_list)
-print(ssa_min)
+# # Gender Suicide  
+# Here we can clearly see that men are far more likely to use a firearm to commit suicide, while women would usually choose a less violent means.  Of the suicide victims, only about a seventh of them were female. 
 
+# In[15]:
 
-# In[70]:
 
+gender_accident = {}
+gender_accident['Male'] = 0
+gender_accident['Female'] = 0
+for d in data:
+    if d[3]=='Accidental' and d[5]=='M':
+        gender_accident['Male'] += 1
+    elif d[3]=='Accidental' and d[5]=='F':
+        gender_accident['Female'] += 1
+gender_accident
 
-def max_births(data):
-    max_list = data[0]
-    for d in data:
-        if d[4] > max_list[4]: max_list = d
-    return max_list
 
+# # Gender Accident  
+# Women are definately the more cautious of the genders, with only about an eighth of accidental gun deaths vitims being female. 
 
-# In[97]:
+# In[16]:
 
 
-cdc_max = max_births(cdc_list)
-print(cdc_max)
-ssa_max = max_births(ssa_list)
-print(ssa_max)
+from collections import OrderedDict
+educ_counts = OrderedDict()
+for d in data:
+    if d[10]=='1' and 'No High School Certificate' not in educ_counts:
+        educ_counts['No High School Certificate'] = 1
+    elif d[10]=='1':
+        educ_counts['No High School Certificate'] += 1
+    elif d[10]=='2' and 'High School Cerificate' not in educ_counts:
+        educ_counts['High School Cerificate'] = 1
+    elif d[10]=='2':
+        educ_counts['High School Cerificate'] += 1
+    elif d[10]=='3' and 'Some College' not in educ_counts:
+        educ_counts['Some College'] = 1
+    elif d[10]=='3':
+        educ_counts['Some College'] += 1
+    elif d[10]=='4' and 'College Graduate' not in educ_counts:
+        educ_counts['College Graduate'] = 1
+    elif d[10]=='4':
+        educ_counts['College Graduate'] += 1
+educ_counts
 
 
-# In[72]:
+# # Gun Deaths by Education  
+# Most of the gun death victims have a High school certificate.  This may be because there are few Americans who don't have one. When we look at the gun death victims who have attended college and those who have graduated from college we see that there are progressively fewer of them.  Lets see what happens when we look at gun deaths per 100k of individuals in each group. 
 
+# In[18]:
 
-def min_criteria(data, column, value):
-    possible = []
-    for d in data:
-        if d[column] == value:
-            possible.append(d)
-    min_list = possible[0]
-    for p in possible:
-        if p[4] < min_list[4]: min_list = p
-    return min_list
-        
 
+from collections import OrderedDict
+educ_suicide = OrderedDict()
+for d in data:
+    if d[3]=='Suicide':
+        if d[10]=='1' and 'No High School Certificate' not in educ_suicide:
+            educ_suicide['No High School Certificate'] = 1
+        elif d[10]=='1':
+            educ_suicide['No High School Certificate'] += 1
+        elif d[10]=='2' and 'High School Cerificate' not in educ_suicide:
+            educ_suicide['High School Cerificate'] = 1
+        elif d[10]=='2':
+            educ_suicide['High School Cerificate'] += 1
+        elif d[10]=='3' and 'Some College' not in educ_suicide:
+            educ_suicide['Some College'] = 1
+        elif d[10]=='3':
+            educ_suicide['Some College'] += 1
+        elif d[10]=='4' and 'College Graduate' not in educ_suicide:
+            educ_suicide['College Graduate'] = 1
+        elif d[10]=='4':
+            educ_suicide['College Graduate'] += 1
+for x in educ_suicide:
+    educ_suicide[x] = educ_suicide[x]*100/educ_counts[x]
+educ_suicide
 
-# In[87]:
 
-
-for i in range (1994, 2004):
-    cdc_min = min_criteria(cdc_list, 0, i)
-    print(cdc_min)
-
-
-# In[88]:
-
-
-for i in range(2000,2015):
-    ssa_min = min_criteria(ssa_list, 0, i)
-    print(ssa_min)
-
-
-# ##  Date of Minimum Births per Year  
-# Both data sets indicate that the Christmas day is the usually the day of the year with the lowest number of biths.  Inbetween 1994 and 2014 there were only two years when this wasn't the case.  In 1995 the day with the lowest number of births was Christmas eve and in 2013 it was the 5th of May.  
-# (note in the years 2000-2003 where the data sets overlap there was a difference of between 100 and 200 births between the cdc and ssa sets)   
-
-# In[100]:
-
-
-def max_criteria(data, column, value):
-    possible = []
-    for d in data:
-        if d[column] == value:
-            possible.append(d)
-    max_list = possible[0]
-    for p in possible:
-        if p[4] > max_list[4]: max_list = p
-    return max_list
-
-
-# In[101]:
-
-
-for i in range (1994, 2004):
-    cdc_max = max_criteria(cdc_list, 0, i)
-    print(cdc_max)
-
-
-# In[102]:
-
-
-for i in range (2000, 2015):
-    ssa_max = max_criteria(ssa_list, 0, i)
-    print(ssa_max)
-
-
-# ## Date of Maximum Births per Year  
-# While there doesn't seem to as much of a distinct pattern when we examine the date of the maximum number of births per a year, there are a couple of inferences we can draw.  With the exception of 1994 and 1996 all the other years had a date inbetween September and December for the highest number of births, with the 30th of December being the mode.  This makes our previous discovery that the day of the year with the least number of births is usually Christmas day even more astounding.
+# # Suicide Rate (%) by Education  
+# When we examine the percentage of gun deaths that were suicide for each group, we find that the higher the level of education, the larger the percentage of gun deaths that can be attributed to suicide. Of those who have graduated from college, 86% of the gun deaths were listed as suicide, while of those who have no high school certificate, only 43%  of the gun deaths were listed as suicide.  
